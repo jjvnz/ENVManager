@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ENV Manager</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary: #64748b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-hover: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .projects-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .project-item {
+      padding: 12px;
+      margin-bottom: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .project-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--primary);
+    }
+
+    .project-item.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .project-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .project-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Main Content */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main-header {
+      padding: 20px 30px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .main-header h2 {
+      font-size: 24px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .editor-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 30px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* ENV Variables */
+    .env-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .env-item {
+      display: grid;
+      grid-template-columns: 30px 1fr 2fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 15px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .env-item input[type="checkbox"] {
+      margin-top: 10px;
+    }
+
+    .env-item input[type="text"] {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+    }
+
+    .env-item input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .env-actions {
+      display: flex;
+      gap: 6px;
+      padding-top: 8px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text);
+    }
+
+    /* Search */
+    .search-box {
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card {
+      padding: 15px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      font-size: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 25px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--secondary);
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 2000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .notification.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .notification.error {
+      border-left: 4px solid var(--danger);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h1>🔐 ENV Manager</h1>
+        <div class="sidebar-actions">
+          <button class="btn btn-primary btn-sm" id="newProjectBtn">➕ Nuevo</button>
+          <button class="btn btn-secondary btn-sm" id="scanDirectoryBtn">📁 Escanear</button>
+        </div>
+      </div>
+      <div class="projects-list" id="projectsList">
+        <!-- Projects will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="main-header">
+        <h2 id="projectTitle">Selecciona un proyecto</h2>
+        <div class="header-actions" id="headerActions" style="display: none;">
+          <button class="btn btn-secondary btn-backups">📦 Backups</button>
+          <button class="btn btn-secondary btn-import">📥 Importar</button>
+          <button class="btn btn-success btn-export">📤 Exportar</button>
+          <button class="btn btn-primary btn-save">💾 Guardar</button>
+          <button class="btn btn-danger btn-delete">🗑️ Eliminar</button>
+        </div>
+      </div>
+
+      <div class="editor-container" id="editorContainer">
+        <div class="empty-state">
+          <h3>Bienvenido a ENV Manager</h3>
+          <p>Crea un nuevo proyecto o escanea un directorio para comenzar</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="modal" id="newProjectModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Nuevo Proyecto</h3>
+        <button class="icon-btn modal-close" data-modal="newProjectModal">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre del Proyecto</label>
+        <input type="text" class="form-input" id="newProjectName" placeholder="mi-proyecto">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción (opcional)</label>
+        <textarea class="form-textarea" id="newProjectDesc" placeholder="Descripción del proyecto..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary modal-close" data-modal="newProjectModal">Cancelar</button>
+        <button class="btn btn-primary" id="createProjectBtn">Crear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backups Modal -->
+  <div class="modal" id="backupsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Backups Disponibles</h3>
+        <button class="icon-btn modal-close" data-modal="backupsModal">✕</button>
+      </div>
+      <div id="backupsList"></div>
+    </div>
+  </div>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>

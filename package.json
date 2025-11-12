@@ -1,0 +1,18 @@
+{
+  "name": "env-manager",
+  "productName": "env-manager",
+  "description": "Gestor de variables de entorno",
+  "keywords": ["electron", "env", "variables"],
+  "main": "./main.js",
+  "version": "1.0.0",
+  "author": "dev",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "39.0.0"
+  }
+}
