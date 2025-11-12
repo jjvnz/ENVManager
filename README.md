@@ -2,6 +2,11 @@
 
 A desktop application built with Electron for managing environment variables efficiently and securely.
 
+
+
+<img width="1364" height="677" alt="image" src="https://github.com/user-attachments/assets/0fdc06dd-a2cb-475d-8b19-1873bda695b3" />
+
+
 ## ✨ Features
 
 - **Project Management**: Create and organize multiple projects with their own environment variables
